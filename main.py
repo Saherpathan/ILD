@@ -1,16 +1,33 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_auc_score, roc_curve
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# Read the data from CSV
+data = pd.read_csv("datasets/Diff_genes_heatmap_NSIP-HEALTHY.csv")
+
+# Filter columns starting with "NSIP" and "HEALTHY"
+columns_to_use = [col for col in data.columns if col.startswith("NSIP") or col.startswith("HEALTHY")]
+
+# Calculate the mean significance value for each gene
+data['mean_significance'] = data[columns_to_use].mean(axis=1)
+
+# Assign labels based on the 'Regulation' column
+labels = (data['Regulation'] == 'Up').astype(int)
+
+# Calculate ROC AUC
+auc = roc_auc_score(labels, data['mean_significance'])
+print("AUC is: ", auc)
+# Plot ROC curve
+fpr, tpr, thresholds = roc_curve(labels, data['mean_significance'])
+plt.plot(fpr, tpr, label=f'ROC curve (AUC = {auc:.2f})')
+plt.plot([0, 1], [0, 1], linestyle='--', color='gray', label='Random')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend(loc='lower right')
+plt.savefig('roc_curve.png')
+
